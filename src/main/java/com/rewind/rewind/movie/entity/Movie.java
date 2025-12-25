@@ -3,6 +3,7 @@ package com.rewind.rewind.movie.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "movies")
@@ -27,8 +28,8 @@ public class Movie {
     @Column(name = "age_rating", length = 10)
     private String ageRating;
 
-    @Column
-    private Double rating; // це поле в таблиці movies: DECIMAL(2,1)
+    @Column(precision = 2, scale = 1)
+    private BigDecimal rating;
 
     @Column(name = "short_plot", columnDefinition = "TEXT")
     private String shortPlot;
@@ -77,8 +78,9 @@ public class Movie {
     public String getAgeRating() { return ageRating; }
     public void setAgeRating(String ageRating) { this.ageRating = ageRating; }
 
-    public Double getRating() { return rating; }
-    public void setRating(Double rating) { this.rating = rating; }
+    public BigDecimal getRating() { return rating; }
+    public void setRating(BigDecimal rating) { this.rating = rating; }
+
 
     public String getShortPlot() { return shortPlot; }
     public void setShortPlot(String shortPlot) { this.shortPlot = shortPlot; }
