@@ -13,3 +13,7 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
     show-sql: true
+app:
+  jwt:
+    secret: "super_long_demo_secret_please_change_me_1234567890"
+    expiration-minutes: 120

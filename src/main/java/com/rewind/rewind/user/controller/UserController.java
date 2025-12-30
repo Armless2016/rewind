@@ -5,6 +5,7 @@ import com.rewind.rewind.user.entity.User;
 import com.rewind.rewind.user.repo.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,6 +23,18 @@ public class UserController {
                 .map(this::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> me(Authentication auth) {
+        if (auth == null) return ResponseEntity.status(401).build();
+
+        String email = auth.getName();
+
+        return users.findByEmail(email)
+                .map(this::toResponse)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(401).build());
     }
 
     private UserResponse toResponse(User u) {

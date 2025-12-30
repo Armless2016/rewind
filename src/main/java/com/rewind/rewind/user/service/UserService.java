@@ -1,25 +1,30 @@
 package com.rewind.rewind.user.service;
 
+import com.rewind.rewind.security.JwtService;
+import com.rewind.rewind.user.dto.UserLoginRequest;
+import com.rewind.rewind.user.dto.UserLoginResponse;
 import com.rewind.rewind.user.dto.UserRegisterRequest;
 import com.rewind.rewind.user.dto.UserResponse;
 import com.rewind.rewind.user.entity.User;
 import com.rewind.rewind.user.entity.UserRole;
 import com.rewind.rewind.user.repo.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Service
 public class UserService {
 
     private final UserRepository users;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public UserService(UserRepository users) {
+    public UserService(UserRepository users, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.users = users;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     public UserResponse register(UserRegisterRequest request) {
-        // перевірка на унікальність
         if (users.existsByUsername(request.getUsername())) {
             throw new IllegalArgumentException("Username already taken");
         }
@@ -42,6 +47,31 @@ public class UserService {
                 saved.getEmail(),
                 saved.getRole().name(),
                 saved.getAvatarUrl()
+        );
+    }
+
+    public UserLoginResponse login(UserLoginRequest request) {
+        var user = users.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+
+        boolean passwordMatches = passwordEncoder.matches(
+                request.getPassword(),
+                user.getPasswordHash()
+        );
+
+        if (!passwordMatches) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        // ✅ тепер генеруємо реальний JWT
+        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+
+        return new UserLoginResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole().name(),
+                token
         );
     }
 }
