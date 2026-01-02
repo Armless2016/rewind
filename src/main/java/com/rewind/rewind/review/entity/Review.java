@@ -55,5 +55,7 @@ public class Review {
     public void setContent(String content) { this.content = content; }
 
     public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+
 
 }

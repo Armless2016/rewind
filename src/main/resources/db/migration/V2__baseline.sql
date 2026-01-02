@@ -1,0 +1,4 @@
+ALTER TABLE movies
+ADD COLUMN  imdb_id VARCHAR(20) UNIQUE,
+ADD COLUMN  trailer_url VARCHAR(255);
+

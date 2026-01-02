@@ -56,4 +56,7 @@ public class Rating {
 
     public Byte getRating() { return rating; }
     public void setRating(Byte rating) { this.rating = rating; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+
 }

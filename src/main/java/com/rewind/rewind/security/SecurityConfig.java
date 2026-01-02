@@ -31,12 +31,15 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // ✅ public endpoints
+
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/movies/**").permitAll()
                         .requestMatchers("/api/users/**").permitAll() // тимчасово; "me" можна буде закрити
 
-                        // ✅ everything else требует JWT
+
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
