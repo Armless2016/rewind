@@ -8,6 +8,7 @@ import com.rewind.rewind.user.dto.UserResponse;
 import com.rewind.rewind.user.entity.User;
 import com.rewind.rewind.user.entity.UserRole;
 import com.rewind.rewind.user.repo.UserRepository;
+import com.rewind.rewind.list.service.system.SystemListService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +18,13 @@ public class UserService {
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final SystemListService systemListService;
 
-    public UserService(UserRepository users, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public UserService(UserRepository users, PasswordEncoder passwordEncoder, JwtService jwtService, SystemListService systemListService) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.systemListService = systemListService;
     }
 
     public UserResponse register(UserRegisterRequest request) {
@@ -40,6 +43,8 @@ public class UserService {
         user.setIsActive(true);
 
         User saved = users.save(user);
+        systemListService.ensureDefaultLists(saved);
+
 
         return new UserResponse(
                 saved.getId(),

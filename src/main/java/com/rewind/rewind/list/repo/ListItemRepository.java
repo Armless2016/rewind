@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface ListItemRepository extends JpaRepository<ListItem, Long> {
     Optional<ListItem> findByListIdAndMovieId(Long listId, Long movieId);
     boolean existsByListAndMovieId(MovieList list, Long movieId);
+    boolean existsByListIdAndMovieId(Long listId, Long movieId);
     void deleteByListIdAndMovieId(Long listId, Long movieId);
 }
