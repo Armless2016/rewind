@@ -9,6 +9,7 @@ public class ProfileResponse {
 
     private Long id;
     private String username;
+    private String displayName;
     private String email;
     private String role;
     private String avatarUrl;
@@ -17,12 +18,20 @@ public class ProfileResponse {
     private List<ProfileRatingItem> recentRatings;
     private List<ProfileReviewItem> recentReviews;
 
-    public ProfileResponse(Long id, String username, String email, String role, String avatarUrl,
-                           List<ProfileListItem> lists,
-                           List<ProfileRatingItem> recentRatings,
-                           List<ProfileReviewItem> recentReviews) {
+    public ProfileResponse(
+            Long id,
+            String username,
+            String displayName,
+            String email,
+            String role,
+            String avatarUrl,
+            List<ProfileListItem> lists,
+            List<ProfileRatingItem> recentRatings,
+            List<ProfileReviewItem> recentReviews
+    ) {
         this.id = id;
         this.username = username;
+        this.displayName = displayName;
         this.email = email;
         this.role = role;
         this.avatarUrl = avatarUrl;
@@ -33,6 +42,7 @@ public class ProfileResponse {
 
     public Long getId() { return id; }
     public String getUsername() { return username; }
+    public String getDisplayName() { return displayName; } // <-- ОЦЕ ДОДАЛИ
     public String getEmail() { return email; }
     public String getRole() { return role; }
     public String getAvatarUrl() { return avatarUrl; }

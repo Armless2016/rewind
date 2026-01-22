@@ -32,14 +32,16 @@ public class RatingService {
             Rating r = existing.get();
             r.setRating(req.getRating().byteValue());
             ratings.save(r);
-            return;
+        } else {
+            Rating r = new Rating();
+            r.setUser(user);
+            r.setMovie(movie);
+            r.setRating(req.getRating().byteValue());
+            ratings.save(r);
         }
 
-        Rating r = new Rating();
-        r.setUser(user);
-        r.setMovie(movie);
-        r.setRating(req.getRating().byteValue());
-        ratings.save(r);
+        // ✅ перерахувати середнє і записати в movies.rating
+        movies.recalcAverageRating(movieId);
     }
 
     public Optional<Integer> getMyRating(String email, Long movieId) {
@@ -52,5 +54,8 @@ public class RatingService {
     public void deleteMyRating(String email, Long movieId) {
         var user = users.findByEmail(email).orElseThrow();
         ratings.deleteByUserIdAndMovieId(user.getId(), movieId);
+
+        // ✅ перерахувати середнє і записати в movies.rating
+        movies.recalcAverageRating(movieId);
     }
 }

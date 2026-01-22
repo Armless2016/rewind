@@ -10,6 +10,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.http.HttpMethod;
 
 
+
+
+
 @Configuration
 public class SecurityConfig {
 
@@ -26,6 +29,9 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // ✅ щоб не маскувало помилки як 403
+                        .requestMatchers("/error").permitAll()
+
                         // ✅ swagger / openapi
                         .requestMatchers(
                                 "/swagger-ui/**",
@@ -33,17 +39,22 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll()
-                        .requestMatchers("/api/users/**").permitAll() // тимчасово; "me" можна буде закрити
 
+                        // ✅ public movies endpoints (саме ці GET)
+                        .requestMatchers(HttpMethod.GET, "/api/movies").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/movies/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/movies/*").permitAll()
+
+                        .requestMatchers("/api/users/**").permitAll() // тимчасово
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-
                         .anyRequest().authenticated()
                 )
+
+
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

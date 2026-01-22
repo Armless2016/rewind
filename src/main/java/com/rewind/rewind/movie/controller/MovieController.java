@@ -2,10 +2,11 @@ package com.rewind.rewind.movie.controller;
 
 import com.rewind.rewind.movie.dto.MovieCardResponse;
 import com.rewind.rewind.movie.dto.MovieDetailsResponse;
-import com.rewind.rewind.movie.entity.Movie;
 import com.rewind.rewind.movie.repo.MovieRepository;
+import com.rewind.rewind.movie.service.MovieDetailsService;
 import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,25 +14,22 @@ import org.springframework.web.bind.annotation.*;
 public class MovieController {
 
     private final MovieRepository movies;
+    private final MovieDetailsService movieDetailsService;
 
-    public MovieController(MovieRepository movies) {
+    public MovieController(MovieRepository movies, MovieDetailsService movieDetailsService) {
         this.movies = movies;
+        this.movieDetailsService = movieDetailsService;
     }
 
-    // GET /api/movies?page=0&size=20&q=inception
+    // GET /api/movies?page=0&size=20
     @GetMapping
     public Page<MovieCardResponse> list(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String q
+            @RequestParam(defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
 
-        Page<Movie> result = (q == null || q.isBlank())
-                ? movies.findAll(pageable)
-                : movies.findByTitleContainingIgnoreCase(q, pageable);
-
-        return result.map(m -> new MovieCardResponse(
+        return movies.findAll(pageable).map(m -> new MovieCardResponse(
                 m.getId(),
                 m.getTitle(),
                 m.getReleaseDate(),
@@ -40,24 +38,18 @@ public class MovieController {
         ));
     }
 
-    // GET /api/movies/1
+    // GET /api/movies/1  -> повертає повну деталку
     @GetMapping("/{id}")
-    public ResponseEntity<MovieDetailsResponse> getById(@PathVariable Long id) {
-        return movies.findById(id)
-                .map(m -> new MovieDetailsResponse(
-                        m.getId(),
-                        m.getImdbId(),
-                        m.getTitle(),
-                        m.getDurationMinutes(),
-                        m.getReleaseDate(),
-                        m.getAgeRating(),
-                        m.getRating(),
-                        m.getShortPlot(),
-                        m.getPhotoUrl(),
-                        m.getBackdropUrl(),
-                        m.getTrailerUrl()
-                ))
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<MovieDetailsResponse> getById(
+            @PathVariable Long id,
+            Authentication auth
+    ) {
+        // Якщо фільму нема — 404
+        if (!movies.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String email = (auth == null ? null : auth.getName());
+        return ResponseEntity.ok(movieDetailsService.getDetails(id, email));
     }
 }

@@ -11,6 +11,7 @@ import com.rewind.rewind.user.repo.UserRepository;
 import com.rewind.rewind.list.service.system.SystemListService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 public class UserService {
@@ -41,6 +42,8 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(UserRole.USER);
         user.setIsActive(true);
+        user.setDisplayName(request.getUsername());
+
 
         User saved = users.save(user);
         systemListService.ensureDefaultLists(saved);
@@ -78,5 +81,13 @@ public class UserService {
                 user.getRole().name(),
                 token
         );
+    }
+    public Long requireUserId() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String email = String.valueOf(principal);
+
+        return users.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"))
+                .getId();
     }
 }

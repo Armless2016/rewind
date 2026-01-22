@@ -2,20 +2,16 @@ package com.rewind.rewind.review.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public class CreateReviewRequest {
+public class UpdateReviewRequest {
 
-    @NotBlank
     @Size(min = 1, max = 5000)
-    private String content;
+    private String content; // nullable
 
-    @NotNull
     @Min(1)
     @Max(5)
-    private Integer rating;
+    private Integer rating; // nullable
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }

@@ -1,9 +1,13 @@
 package com.rewind.rewind.movie.entity;
 
+import com.rewind.rewind.genre.entity.Genre;
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "movies")
@@ -28,7 +32,9 @@ public class Movie {
     @Column(name = "age_rating", length = 10)
     private String ageRating;
 
-    @Column(precision = 2, scale = 1)
+    // ✅ В БД rating = DECIMAL, тому BigDecimal ок.
+    // Якщо в БД зараз DECIMAL(2,1) — краще зробити DECIMAL(3,1), щоб вмістити 10.0
+    @Column(name = "rating", precision = 3, scale = 1)
     private BigDecimal rating;
 
     @Column(name = "short_plot", columnDefinition = "TEXT")
@@ -42,6 +48,15 @@ public class Movie {
 
     @Column(name = "trailer_url")
     private String trailerUrl;
+
+    // ✅ зв'язок Movie <-> Genre через movie_genres
+    @ManyToMany
+    @JoinTable(
+            name = "movie_genres",
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id")
+    )
+    private Set<Genre> genres = new HashSet<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -63,6 +78,7 @@ public class Movie {
 
     // getters/setters
     public Long getId() { return id; }
+
     public String getImdbId() { return imdbId; }
     public void setImdbId(String imdbId) { this.imdbId = imdbId; }
 
@@ -81,7 +97,6 @@ public class Movie {
     public BigDecimal getRating() { return rating; }
     public void setRating(BigDecimal rating) { this.rating = rating; }
 
-
     public String getShortPlot() { return shortPlot; }
     public void setShortPlot(String shortPlot) { this.shortPlot = shortPlot; }
 
@@ -93,4 +108,10 @@ public class Movie {
 
     public String getTrailerUrl() { return trailerUrl; }
     public void setTrailerUrl(String trailerUrl) { this.trailerUrl = trailerUrl; }
+
+    public Set<Genre> getGenres() { return genres; }
+    public void setGenres(Set<Genre> genres) { this.genres = genres; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 }

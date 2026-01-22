@@ -31,6 +31,9 @@ public class Review {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "rating")
+    private Byte rating;
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
@@ -56,6 +59,9 @@ public class Review {
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    public Byte getRating() { return rating; }
+    public void setRating(Byte rating) { this.rating = rating; }
 
 
 }

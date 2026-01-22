@@ -1,6 +1,6 @@
 package com.rewind.rewind.movie.service.admin;
 
-import com.rewind.rewind.movie.dto.MovieDetailsResponse;
+import com.rewind.rewind.movie.dto.MovieCardResponse;
 import com.rewind.rewind.movie.dto.admin.CreateMovieRequest;
 import com.rewind.rewind.movie.dto.admin.UpdateMovieRequest;
 import com.rewind.rewind.movie.entity.Movie;
@@ -16,7 +16,7 @@ public class AdminMovieService {
         this.movies = movies;
     }
 
-    public MovieDetailsResponse create(CreateMovieRequest req) {
+    public MovieCardResponse create(CreateMovieRequest req) {
         Movie m = new Movie();
         m.setTitle(req.getTitle());
         m.setImdbId(req.getImdbId());
@@ -30,10 +30,10 @@ public class AdminMovieService {
         m.setTrailerUrl(req.getTrailerUrl());
 
         Movie saved = movies.save(m);
-        return toDetails(saved);
+        return toCard(saved);
     }
 
-    public MovieDetailsResponse update(Long id, UpdateMovieRequest req) {
+    public MovieCardResponse update(Long id, UpdateMovieRequest req) {
         Movie m = movies.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
 
@@ -49,7 +49,7 @@ public class AdminMovieService {
         if (req.getTrailerUrl() != null) m.setTrailerUrl(req.getTrailerUrl());
 
         Movie saved = movies.save(m);
-        return toDetails(saved);
+        return toCard(saved);
     }
 
     public void delete(Long id) {
@@ -59,19 +59,13 @@ public class AdminMovieService {
         movies.deleteById(id);
     }
 
-    private MovieDetailsResponse toDetails(Movie m) {
-        return new MovieDetailsResponse(
+    private MovieCardResponse toCard(Movie m) {
+        return new MovieCardResponse(
                 m.getId(),
-                m.getImdbId(),
                 m.getTitle(),
-                m.getDurationMinutes(),
                 m.getReleaseDate(),
-                m.getAgeRating(),
                 m.getRating(),
-                m.getShortPlot(),
-                m.getPhotoUrl(),
-                m.getBackdropUrl(),
-                m.getTrailerUrl()
+                m.getPhotoUrl()
         );
     }
 }

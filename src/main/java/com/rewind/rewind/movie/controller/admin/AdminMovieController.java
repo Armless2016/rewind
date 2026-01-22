@@ -1,6 +1,6 @@
 package com.rewind.rewind.movie.controller.admin;
 
-import com.rewind.rewind.movie.dto.MovieDetailsResponse;
+import com.rewind.rewind.movie.dto.MovieCardResponse;
 import com.rewind.rewind.movie.dto.admin.CreateMovieRequest;
 import com.rewind.rewind.movie.dto.admin.UpdateMovieRequest;
 import com.rewind.rewind.movie.service.admin.AdminMovieService;
@@ -19,12 +19,12 @@ public class AdminMovieController {
     }
 
     @PostMapping
-    public MovieDetailsResponse create(@Valid @RequestBody CreateMovieRequest req) {
+    public MovieCardResponse create(@Valid @RequestBody CreateMovieRequest req) {
         return service.create(req);
     }
 
     @PutMapping("/{id}")
-    public MovieDetailsResponse update(@PathVariable Long id, @RequestBody UpdateMovieRequest req) {
+    public MovieCardResponse update(@PathVariable Long id, @Valid @RequestBody UpdateMovieRequest req) {
         return service.update(id, req);
     }
 

@@ -36,6 +36,9 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "display_name", length = 60)
+    private String displayName;
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
@@ -71,4 +74,7 @@ public class User {
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
 }
