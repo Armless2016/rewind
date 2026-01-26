@@ -5,12 +5,12 @@ import jakarta.validation.constraints.Size;
 public class UpdateListRequest {
 
     @Size(min = 1, max = 120)
-    private String name; // nullable
+    private String name;
 
-    @Size(max = 2000)
-    private String description; // nullable
+    @Size(max = 5000)
+    private String description;
 
-    private Boolean isPublic; // nullable
+    private Boolean isPublic;
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
