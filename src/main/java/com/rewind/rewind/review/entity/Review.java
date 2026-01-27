@@ -34,6 +34,19 @@ public class Review {
     @Column(name = "rating")
     private Byte rating;
 
+    @Column(name = "is_hidden", nullable = false)
+    private Boolean isHidden = false;
+
+    @Column(name = "moderated_reason", length = 255)
+    private String moderatedReason;
+
+    @Column(name = "moderated_at")
+    private Instant moderatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "moderated_by")
+    private User moderatedBy;
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
@@ -62,6 +75,18 @@ public class Review {
 
     public Byte getRating() { return rating; }
     public void setRating(Byte rating) { this.rating = rating; }
+
+    public Boolean getIsHidden() { return isHidden; }
+    public void setIsHidden(Boolean hidden) { isHidden = hidden; }
+
+    public String getModeratedReason() { return moderatedReason; }
+    public void setModeratedReason(String moderatedReason) { this.moderatedReason = moderatedReason; }
+
+    public Instant getModeratedAt() { return moderatedAt; }
+    public void setModeratedAt(Instant moderatedAt) { this.moderatedAt = moderatedAt; }
+
+    public User getModeratedBy() { return moderatedBy; }
+    public void setModeratedBy(User moderatedBy) { this.moderatedBy = moderatedBy; }
 
 
 }

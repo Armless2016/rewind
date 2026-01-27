@@ -57,7 +57,7 @@ public class ReviewService {
     }
 
     public Page<ReviewResponse> listByMovie(Long movieId, int page, int size) {
-        var p = reviews.findAllByMovieId(movieId, PageRequest.of(page, size));
+        var p = reviews.findAllByMovieIdAndIsHiddenFalse(movieId, PageRequest.of(page, size));
         return p.map(r -> new ReviewResponse(
                 r.getId(),
                 r.getUser().getId(),
