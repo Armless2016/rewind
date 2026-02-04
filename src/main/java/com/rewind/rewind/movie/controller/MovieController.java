@@ -8,20 +8,21 @@ import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/movies")
 public class MovieController {
 
     private final MovieRepository movies;
-    private final MovieDetailsService movieDetailsService;
+    private final MovieDetailsService details;
 
-    public MovieController(MovieRepository movies, MovieDetailsService movieDetailsService) {
+    public MovieController(MovieRepository movies, MovieDetailsService details) {
         this.movies = movies;
-        this.movieDetailsService = movieDetailsService;
+        this.details = details;
     }
 
-    // GET /api/movies?page=0&size=20
     @GetMapping
     public Page<MovieCardResponse> list(
             @RequestParam(defaultValue = "0") int page,
@@ -38,18 +39,19 @@ public class MovieController {
         ));
     }
 
-    // GET /api/movies/1  -> повертає повну деталку
+    // GET /api/movies/{id} -> повна деталка
     @GetMapping("/{id}")
-    public ResponseEntity<MovieDetailsResponse> getById(
-            @PathVariable Long id,
-            Authentication auth
-    ) {
-        // Якщо фільму нема — 404
-        if (!movies.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<MovieDetailsResponse> getById(@PathVariable Long id, Authentication auth) {
+        String emailOrNull = (auth == null ? null : auth.getName());
 
-        String email = (auth == null ? null : auth.getName());
-        return ResponseEntity.ok(movieDetailsService.getDetails(id, email));
+        try {
+            // якщо фільму нема — MovieDetailsService має кинути 404 (див. нижче)
+            return ResponseEntity.ok(details.getDetails(id, emailOrNull));
+        } catch (ResponseStatusException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return ResponseEntity.notFound().build();
+            }
+            throw ex;
+        }
     }
 }

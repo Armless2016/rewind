@@ -12,9 +12,10 @@ import com.rewind.rewind.movie.entity.Movie;
 import com.rewind.rewind.movie.repo.MovieRepository;
 import com.rewind.rewind.similar.repo.SimilarMovieRepository;
 import com.rewind.rewind.user.repo.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class MovieDetailsService {
@@ -49,13 +50,17 @@ public class MovieDetailsService {
         this.listItems = listItems;
     }
 
+    @Transactional(readOnly = true)
     public MovieDetailsResponse getDetails(Long movieId, String userEmailOrNull) {
-        Movie m = movies.findById(movieId).orElseThrow();
+        Movie m = movies.findById(movieId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found"));
 
+        // Genres (ManyToMany може бути LAZY, але транзакція це покриє)
         var genres = m.getGenres().stream()
                 .map(g -> new MovieDetailsResponse.IdNameDto(g.getId(), g.getName()))
                 .toList();
 
+        // Directors (через repo)
         var directors = movieDirectors.findById_MovieId(movieId).stream()
                 .map(md -> new MovieDetailsResponse.PersonDto(
                         md.getDirector().getId(),
@@ -64,6 +69,7 @@ public class MovieDetailsService {
                 ))
                 .toList();
 
+        // Actors (через repo)
         var actors = movieActors.findById_MovieIdOrderByCastOrderAsc(movieId).stream()
                 .map(ma -> new MovieDetailsResponse.ActorRoleDto(
                         ma.getActor().getId(),
@@ -74,6 +80,7 @@ public class MovieDetailsService {
                 ))
                 .toList();
 
+        // External ratings
         var ext = externalRatings.findByMovieId(movieId).stream()
                 .map(er -> new MovieDetailsResponse.ExternalRatingDto(
                         er.getSource().name(),
@@ -83,6 +90,7 @@ public class MovieDetailsService {
                 ))
                 .toList();
 
+        // Similar movies
         var similar = similarMovies.findById_MovieId(movieId).stream()
                 .map(sm -> sm.getSimilarMovie())
                 .map(x -> new MovieCardResponse(
@@ -94,17 +102,18 @@ public class MovieDetailsService {
                 ))
                 .toList();
 
+        // My flags (не валимо весь endpoint, якщо у юзера нема системних списків)
         MovieDetailsResponse.MyFlags flags = null;
         if (userEmailOrNull != null) {
             var user = users.findByEmail(userEmailOrNull).orElseThrow();
 
-            var watchedList = lists.findByUserAndListType(user, ListType.WATCHED).orElseThrow();
-            var watchlistList = lists.findByUserAndListType(user, ListType.WATCHLIST).orElseThrow();
-            var favoritesList = lists.findByUserAndListType(user, ListType.FAVORITES).orElseThrow();
+            var watchedOpt = lists.findByUserAndListType(user, ListType.WATCHED);
+            var watchlistOpt = lists.findByUserAndListType(user, ListType.WATCHLIST);
+            var favoritesOpt = lists.findByUserAndListType(user, ListType.FAVORITES);
 
-            boolean watched = listItems.existsByListIdAndMovieId(watchedList.getId(), movieId);
-            boolean watchlist = listItems.existsByListIdAndMovieId(watchlistList.getId(), movieId);
-            boolean favorites = listItems.existsByListIdAndMovieId(favoritesList.getId(), movieId);
+            boolean watched = watchedOpt.isPresent() && listItems.existsByListIdAndMovieId(watchedOpt.get().getId(), movieId);
+            boolean watchlist = watchlistOpt.isPresent() && listItems.existsByListIdAndMovieId(watchlistOpt.get().getId(), movieId);
+            boolean favorites = favoritesOpt.isPresent() && listItems.existsByListIdAndMovieId(favoritesOpt.get().getId(), movieId);
 
             flags = new MovieDetailsResponse.MyFlags(watched, watchlist, favorites);
         }
