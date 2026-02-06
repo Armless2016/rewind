@@ -5,6 +5,9 @@ import styles from "./Login.module.css";
 import { login as apiLogin } from "../api/auth.api";
 import { useAuth } from "../context/AuthContext";
 
+import Header from "../Header/Header";
+import Footer from "../Footer/Footer";
+
 export default function Login() {
   const navigate = useNavigate();
   const auth = useAuth() as any; // щоб не впасти, якщо в AuthContext різні назви методів
@@ -37,7 +40,6 @@ export default function Login() {
       // 2) Якщо є setToken(token)
       else if (typeof auth.setToken === "function") {
         auth.setToken(token);
-        // якщо треба “remember me” — збережемо ще й вручну
         (remember ? localStorage : sessionStorage).setItem("token", token);
       }
       // 3) fallback: просто в storage
@@ -47,7 +49,6 @@ export default function Login() {
 
       navigate("/");
     } catch (err: any) {
-      // типові помилки: 401/400
       const msg =
         err?.response?.data?.message ||
         err?.response?.data ||
@@ -60,83 +61,89 @@ export default function Login() {
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <h1 className={styles.title}>Welcome back</h1>
+    <div className={styles.layout}>
+      <Header />
 
-        <form onSubmit={onSubmit}>
-          <input
-            type="email"
-            placeholder="Enter email"
-            className={styles.input}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            required
-          />
+      <main className={styles.content}>
+        <div className={styles.card}>
+          <h1 className={styles.title}>Welcome back</h1>
 
-          <input
-            type="password"
-            placeholder="Password"
-            className={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
+          <form onSubmit={onSubmit}>
+            <input
+              type="email"
+              placeholder="Enter email"
+              className={styles.input}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
 
-          <div className={styles.row}>
-            <label className={styles.remember}>
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-              />
-              Remember me
-            </label>
+            <input
+              type="password"
+              placeholder="Password"
+              className={styles.input}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
 
-            <span
-              className={styles.forgot}
-              onClick={() => navigate("/forgot-password")}
-            >
-              Forgot password?
-            </span>
+            <div className={styles.row}>
+              <label className={styles.remember}>
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                />
+                Remember me
+              </label>
+
+              <span
+                className={styles.forgot}
+                onClick={() => navigate("/forgot-password")}
+              >
+                Forgot password?
+              </span>
+            </div>
+
+            {error && (
+              <p style={{ color: "tomato", marginTop: 8, marginBottom: 0 }}>
+                {error}
+              </p>
+            )}
+
+            <button type="submit" className={styles.button} disabled={loading}>
+              {loading ? "Logging in..." : "Log in"}
+            </button>
+          </form>
+
+          <div className={styles.dividerRow}>
+            <span></span>
+            <p>Sign in with</p>
+            <span></span>
           </div>
 
-          {error && (
-            <p style={{ color: "tomato", marginTop: 8, marginBottom: 0 }}>
-              {error}
-            </p>
-          )}
+          <div className={styles.social}>
+            <div className={styles.icon}>
+              <i className="fa-brands fa-apple"></i>
+            </div>
 
-          <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? "Logging in..." : "Log in"}
-          </button>
-        </form>
+            <div className={styles.icon}>
+              <i className="fa-brands fa-google"></i>
+            </div>
+          </div>
 
-        <div className={styles.dividerRow}>
-          <span></span>
-          <p>Sign in with</p>
-          <span></span>
+          <p className={styles.footer}>
+            Don’t have an account?{" "}
+            <Link to="/register" style={{ fontWeight: 600 }}>
+              Create one
+            </Link>
+          </p>
         </div>
+      </main>
 
-        <div className={styles.social}>
-          <div className={styles.icon}>
-            <i className="fa-brands fa-apple"></i>
-          </div>
-
-          <div className={styles.icon}>
-            <i className="fa-brands fa-google"></i>
-          </div>
-        </div>
-
-        <p className={styles.footer}>
-          Don’t have an account?{" "}
-          <Link to="/register" style={{ fontWeight: 600 }}>
-            Create one
-          </Link>
-        </p>
-      </div>
+      <Footer />
     </div>
   );
 }

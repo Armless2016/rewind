@@ -1,15 +1,11 @@
 import { Search } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import logoImg from "../assets/logo.png";
 import "./Header.css";
 import { useAuth } from "../context/AuthContext";
 
 function Header() {
   const { isAuth, logout } = useAuth();
-  const location = useLocation();
-
-  const isHome = location.pathname === "/";
-  const hideAuthLinksOnHome = !isAuth && isHome;
 
   return (
     <header className="rewind-header">
@@ -24,6 +20,8 @@ function Header() {
       <nav className="nav-center">
         <Link to="/search">FILMS</Link>
         <Link to="/lists">LISTS</Link>
+        <Link to="/members">MEMBERS</Link>
+        <Link to="/journals">JOURNALS</Link>
         <Link to="/profile">ACCOUNT</Link>
       </nav>
 
@@ -32,15 +30,8 @@ function Header() {
           <Search size={18} />
         </Link>
 
-        {/* ✅ На головній для гостя ховаємо Log in / Sign up */}
-        {!isAuth ? (
-          hideAuthLinksOnHome ? null : (
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <Link to="/login">Log in</Link>
-              <Link to="/register">Sign up</Link>
-            </div>
-          )
-        ) : (
+        {/* ✅ У хедері НЕМАЄ Log in / Sign up взагалі */}
+        {isAuth && (
           <button className="login-toggle" onClick={logout}>
             Log out
           </button>

@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import styles from "./ForgotPassword.module.css";
 import { forgotPassword } from "../api/auth.api";
 
+import Header from "../Header/Header";
+import Footer from "../Footer/Footer";
+
 export default function ForgotPassword() {
   const navigate = useNavigate();
 
@@ -24,55 +27,53 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
+    <div className={styles.layout}>
+      <Header />
 
-        {/* ← BACK TO LOGIN */}
-        <button
-          className={styles.back}
-          onClick={() => navigate("/login")}
-        >
-          ← Return
-        </button>
-
-        <div className={styles.icon}>🔒</div>
-
-        <h1 className={styles.title}>Forgot your password?</h1>
-
-        <p className={styles.text}>
-          Enter your email address and we will send you a link to reset your
-          password.
-        </p>
-
-        <form onSubmit={submit}>
-          <input
-            className={styles.input}
-            type="email"
-            placeholder="Enter email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          {message && <p className={styles.success}>{message}</p>}
-          {error && <p className={styles.error}>{error}</p>}
-
-          <button className={styles.button} type="submit">
-            Reset password
+      <main className={styles.content}>
+        <div className={styles.card}>
+          {/* ← BACK TO LOGIN */}
+          <button className={styles.back} onClick={() => navigate("/login")}>
+            ← Return
           </button>
-        </form>
 
-        <div className={styles.divider}>Or</div>
+          <div className={styles.icon}>🔒</div>
 
-        {/* → REGISTER */}
-        <p
-          className={styles.create}
-          onClick={() => navigate("/register")}
-        >
-          Create new account
-        </p>
+          <h1 className={styles.title}>Forgot your password?</h1>
 
-      </div>
+          <p className={styles.text}>
+            Enter your email address and we will send you a link to reset your
+            password.
+          </p>
+
+          <form onSubmit={submit}>
+            <input
+              className={styles.input}
+              type="email"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            {message && <p className={styles.success}>{message}</p>}
+            {error && <p className={styles.error}>{error}</p>}
+
+            <button className={styles.button} type="submit">
+              Reset password
+            </button>
+          </form>
+
+          <div className={styles.divider}>Or</div>
+
+          {/* → REGISTER */}
+          <p className={styles.create} onClick={() => navigate("/register")}>
+            Create new account
+          </p>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 }

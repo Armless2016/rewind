@@ -5,6 +5,9 @@ import styles from "./Register.module.css";
 import { register as apiRegister, login as apiLogin } from "../api/auth.api";
 import { useAuth } from "../context/AuthContext";
 
+import Header from "../Header/Header";
+import Footer from "../Footer/Footer";
+
 export default function Register() {
   const navigate = useNavigate();
   const auth = useAuth() as any;
@@ -59,63 +62,76 @@ export default function Register() {
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <h1 className={styles.title}>Create your account</h1>
+    <div className={styles.layout}>
+      <Header />
 
-        <form onSubmit={submit}>
-          <input
-            className={styles.input}
-            placeholder="Enter username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            required
-          />
+      <main className={styles.content}>
+        <div className={styles.card}>
+          <h1 className={styles.title}>Create your account</h1>
 
-          <input
-            className={styles.input}
-            type="email"
-            placeholder="Enter email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            required
-          />
-
-          <input
-            className={styles.input}
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="new-password"
-            required
-          />
-
-          <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+          <form onSubmit={submit}>
             <input
-              type="checkbox"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
+              className={styles.input}
+              placeholder="Enter username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+              required
             />
-            Remember me
-          </label>
 
-          {error && <p className={styles.error}>{error}</p>}
+            <input
+              className={styles.input}
+              type="email"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
 
-          <button className={styles.button} type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Create Account"}
-          </button>
-        </form>
+            <input
+              className={styles.input}
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+            />
 
-        <p className={styles.footer} style={{ marginTop: "25px" }}>
-          Already have an account?{" "}
-          <Link to="/login" style={{ fontWeight: 600 }}>
-            Log in
-          </Link>
-        </p>
-      </div>
+            <label
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                marginTop: 8,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+              />
+              Remember me
+            </label>
+
+            {error && <p className={styles.error}>{error}</p>}
+
+            <button className={styles.button} type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create Account"}
+            </button>
+          </form>
+
+          <p className={styles.footer} style={{ marginTop: "25px" }}>
+            Already have an account?{" "}
+            <Link to="/login" style={{ fontWeight: 600 }}>
+              Log in
+            </Link>
+          </p>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 }
