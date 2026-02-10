@@ -53,72 +53,54 @@
   width: 92px;
   height: 92px;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
-  border: 3px solid rgba(255,255,255,0.85);
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  font-weight: 900;
-  font-size: 32px;
+  background: rgba(255,255,255,0.14);
+  border: 3px solid rgba(255,255,255,0.55);
 }
 
 .name {
   margin: 0;
-  color: #fff;
+  font-size: 28px;
   font-weight: 900;
-  font-size: 40px;
-  letter-spacing: 0.2px;
+  color: rgba(255,255,255,0.95);
 }
 
-.countryRow {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255,255,255,0.70);
+.username {
+  margin-top: 6px;
   font-size: 13px;
-  font-weight: 600;
-}
-
-.countryIcon { opacity: 0.7; }
-.countryText { text-transform: uppercase; letter-spacing: 0.05em; }
-
-.bio {
-  margin: 16px 0 0;
-  color: rgba(255,255,255,0.70);
-  font-size: 13px;
-  line-height: 1.45;
-  max-width: 520px;
+  color: rgba(255,255,255,0.55);
 }
 
 .stats {
-  margin-top: 18px;
+  margin-top: 22px;
   display: flex;
-  gap: 42px;
+  gap: 46px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .statValue {
-  color: #fff;
+  font-size: 20px;
   font-weight: 900;
-  font-size: 14px;
+  color: rgba(255,255,255,0.92);
 }
 
 .statLabel {
-  margin-top: 2px;
-  color: rgba(255,255,255,0.60);
-  font-size: 12px;
+  margin-top: 3px;
+  font-size: 11px;
+  letter-spacing: 0.2px;
+  color: rgba(255,255,255,0.55);
 }
 
 .editBtn {
-  margin-top: 18px;
-  height: 40px;
-  padding: 0 26px;
+  margin-top: 28px;
+  height: 36px;
+  padding: 0 24px;
   border-radius: 999px;
   border: none;
   background: #fff;
-  color: #121212;
-  font-weight: 700;
-  font-size: 13px;
+  color: #141414;
+  font-weight: 800;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -304,158 +286,279 @@
 .reviewRating { color: rgba(255,255,255,0.70); font-weight: 700; }
 
 .reviewDate {
-  color: rgba(255,255,255,0.50);
+  color: rgba(255,255,255,0.55);
   font-size: 11px;
   white-space: nowrap;
 }
 
 .reviewText {
-  margin: 8px 0 0;
-  color: rgba(255,255,255,0.62);
+  margin: 10px 0 0;
+  color: rgba(255,255,255,0.70);
   font-size: 12px;
-  line-height: 1.45;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  line-height: 1.55;
 }
 
 /* Following */
 .followingRow {
   display: flex;
-  justify-content: center;
-  gap: 16px;
-  padding: 6px 0 2px;
+  gap: 18px;
 }
 
 .followBubble {
-  width: 44px;
-  height: 44px;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.07);
 }
 
 /* Lists */
 .listCard {
   display: flex;
   gap: 18px;
-  padding: 16px;
+  padding: 18px;
   border-radius: 18px;
   background: rgba(255,255,255,0.06);
 }
 
 .listPosters {
-  width: 260px;
-  height: 120px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.listPosterSlot {
-  border-radius: 14px;
-  overflow: hidden;
-  background: rgba(255,255,255,0.08);
+  grid-template-columns: repeat(2, 72px);
+  grid-template-rows: repeat(2, 104px);
+  gap: 8px;
 }
 
 .listPosterSlot img {
-  width: 100%;
-  height: 100%;
+  width: 72px;
+  height: 104px;
+  border-radius: 14px;
   object-fit: cover;
   display: block;
 }
 
-.listPosterFallback { width: 100%; height: 100%; }
+.listPosterFallback {
+  width: 72px;
+  height: 104px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+}
 
 .listInfo { flex: 1; min-width: 0; }
-.listTitle { color: rgba(255,255,255,0.92); font-weight: 900; font-size: 13px; }
-.listMeta { margin-top: 6px; color: rgba(255,255,255,0.55); font-size: 11px; }
+
+.listTitle {
+  color: rgba(255,255,255,0.92);
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.listMeta {
+  margin-top: 4px;
+  color: rgba(255,255,255,0.60);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .listDesc {
   margin: 10px 0 0;
-  color: rgba(255,255,255,0.62);
+  color: rgba(255,255,255,0.66);
   font-size: 12px;
-  line-height: 1.45;
-  max-width: 560px;
+  line-height: 1.55;
 }
 
 .empty {
   color: rgba(255,255,255,0.55);
   font-size: 12px;
-  padding: 10px 0 0;
 }
 
-.footerSpace { height: 160px; }
+.footerSpace { height: 70px; }
 
 /* Modal */
 .modalBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.60);
+  background: rgba(0,0,0,0.55);
   display: grid;
   place-items: center;
   z-index: 999;
 }
 
 .modal {
-  width: 520px;
-  max-width: calc(100vw - 40px);
+  width: 420px;
+  background: #1b1b1b;
   border-radius: 18px;
-  background: #2b2b2b;
-  border: 1px solid rgba(255,255,255,0.10);
   padding: 18px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.92);
 }
 
 .modalTitle {
-  margin: 0 0 14px 0;
-  color: #fff;
+  margin: 0 0 14px;
+  font-size: 14px;
   font-weight: 900;
-  font-size: 16px;
 }
 
 .modalLabel {
   display: block;
   margin: 10px 0 6px;
-  color: rgba(255,255,255,0.70);
-  font-size: 12px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
 }
 
 .modalInput {
   width: 100%;
-  height: 38px;
+  height: 36px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.06);
-  color: #fff;
+  color: rgba(255,255,255,0.92);
   padding: 0 12px;
   outline: none;
+  font-size: 12px;
 }
 
 .modalActions {
-  margin-top: 14px;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  margin-top: 14px;
 }
 
 .modalBtnGhost {
   height: 34px;
-  padding: 0 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.14);
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
   background: transparent;
   color: rgba(255,255,255,0.75);
   cursor: pointer;
+  font-size: 12px;
 }
 
 .modalBtn {
   height: 34px;
-  padding: 0 16px;
-  border-radius: 12px;
+  padding: 0 14px;
+  border-radius: 999px;
   border: none;
   background: #fff;
-  color: #111;
+  color: #141414;
+  cursor: pointer;
   font-weight: 800;
+  font-size: 12px;
+}
+
+/* ===== Films tab (Watched grid) ===== */
+.filmsTopRow {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 8px 0 14px;
+}
+
+.filmsTitle {
+  margin: 0;
+  color: rgba(255,255,255,0.92);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.filmsGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 22px;
+  padding: 20px 0 6px;
+}
+
+.filmsCard {
+  width: 100%;
+}
+
+.filmsPoster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 18px;
+  object-fit: cover;
+  display: block;
+  background: rgba(255,255,255,0.06);
+}
+
+.filmsPosterFallback {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.06);
+  display: grid;
+  place-items: center;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+}
+
+.filmsBottomBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 0 26px;
+}
+
+.filmsPager {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pagerBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pagerBtnActive {
+  color: rgba(255,255,255,0.92);
+}
+
+.pagerDots {
+  color: rgba(255,255,255,0.45);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.orderBtn {
+  position: absolute;
+  right: 0;
+  height: 28px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: transparent;
+  color: rgba(255,255,255,0.68);
+  font-size: 11px;
   cursor: pointer;
 }
+
+.orderBtn:hover { background: rgba(255,255,255,0.06); }
+
+.placeholder {
+  color: rgba(255,255,255,0.7);
+  padding: 18px 0 80px;
+  font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .filmsGrid { grid-template-columns: repeat(5, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .filmsGrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 680px) {
+  .filmsGrid { grid-template-columns: repeat(3, 1fr); }
+  .orderBtn { position: static; }
+  .filmsBottomBar { justify-content: space-between; }
+}
+

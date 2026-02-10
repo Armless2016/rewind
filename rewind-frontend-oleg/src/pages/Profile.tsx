@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import styles from "./Profile.module.css";
 
 import { useAuth } from "../context/AuthContext";
-import { getProfile, getMyFavorites, getMyWatched, updateProfile } from "../api/profile.api";
+import {
+  getProfile,
+  getMyFavorites,
+  getMyWatched,
+  updateProfile,
+} from "../api/profile.api";
 import { getMovieDetails } from "../api/movies.api";
 import { getUserLists } from "../api/lists.api";
 import api from "../api/axios";
@@ -75,9 +80,12 @@ type ListItem = {
 };
 
 function formatDate(iso: string) {
-  // простий формат як у макеті: "18 Dec 2025"
   const d = new Date(iso);
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function Stars({ value }: { value: number }) {
@@ -93,9 +101,25 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+function buildPager(totalPages: number) {
+  // 1 2 3 … last (як на скріні)
+  if (!totalPages || totalPages <= 1) return [];
+  const last = totalPages - 1;
+  if (totalPages <= 4) return Array.from({ length: totalPages }).map((_, i) => i);
+  return [0, 1, 2, "dots", last] as const;
+}
+
 export default function Profile() {
   const { isAuth } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  type Tab = "profile" | "films" | "watchlist" | "likes" | "lists";
+  const activeTab: Tab = (() => {
+    const q = new URLSearchParams(location.search).get("tab");
+    if (q === "films" || q === "watchlist" || q === "likes" || q === "lists") return q;
+    return "profile";
+  })();
 
   // ✅ якщо не залогінений — на Register
   useEffect(() => {
@@ -109,7 +133,15 @@ export default function Profile() {
   const [watched, setWatched] = useState<MovieCard[]>([]);
   const [watchedTotal, setWatchedTotal] = useState<number>(0);
 
+  // Films tab (Watched grid)
+  const FILMS_PAGE_SIZE = 24; // 6 posters x 4 rows (like макет)
+  const [filmsPageIndex, setFilmsPageIndex] = useState(0);
+  const [filmsWatched, setFilmsWatched] = useState<Page<MovieCard> | null>(null);
+  const [filmsLoading, setFilmsLoading] = useState(false);
+
   const [backdropUrl, setBackdropUrl] = useState<string | null>(null);
+
+
 
   // для постерів у reviews (бо бекенд review item не має photoUrl)
   const [moviePosterById, setMoviePosterById] = useState<Record<number, string>>({});
@@ -146,7 +178,7 @@ export default function Profile() {
         const favPage: Page<MovieCard> = favRes.data;
         setFavorites(favPage.content || []);
 
-        // ✅ watched (4) + total для лічильника Films
+        // ✅ watched preview (4) + total для лічильника Films
         const watRes = await getMyWatched(0, 4);
         if (!alive) return;
         const watPage: Page<MovieCard> = watRes.data;
@@ -232,6 +264,28 @@ export default function Profile() {
     };
   }, []);
 
+  // ✅ Films tab: Watched grid + pagination
+  useEffect(() => {
+    let alive = true;
+
+    async function loadFilmsWatched() {
+      if (activeTab !== "films") return;
+      try {
+        setFilmsLoading(true);
+        const res = await getMyWatched(filmsPageIndex, FILMS_PAGE_SIZE);
+        if (!alive) return;
+        setFilmsWatched(res.data);
+      } finally {
+        if (alive) setFilmsLoading(false);
+      }
+    }
+
+    loadFilmsWatched();
+    return () => {
+      alive = false;
+    };
+  }, [activeTab, filmsPageIndex]);
+
   useEffect(() => {
     if (!profile) return;
     setEditName(profile.displayName || profile.username || "");
@@ -265,55 +319,47 @@ export default function Profile() {
         className={styles.hero}
         style={
           backdropUrl
-            ? { backgroundImage: `url(${backdropUrl})` }
+            ? {
+                backgroundImage: `
+                  radial-gradient(700px 420px at 50% 25%, rgba(73, 154, 160, 0.70), transparent 60%),
+                  radial-gradient(620px 420px at 82% 30%, rgba(193, 145, 70, 0.70), transparent 60%),
+                  linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.85)),
+                  url(${backdropUrl})
+                `,
+              }
             : undefined
         }
       >
         <div className={styles.heroOverlay} />
-
         <div className={styles.heroInner}>
           <div className={styles.avatarWrap}>
             {profile?.avatarUrl ? (
               <img className={styles.avatar} src={profile.avatarUrl} alt="avatar" />
             ) : (
-              <div className={styles.avatarFallback} aria-label="avatar">
-                {displayName.slice(0, 1).toUpperCase()}
-              </div>
+              <div className={styles.avatarFallback} />
             )}
           </div>
 
           <h1 className={styles.name}>{displayName}</h1>
-
-          <div className={styles.countryRow}>
-            <span className={styles.countryIcon}>×</span>
-            <span className={styles.countryText}>USA</span>
-          </div>
-
-          <p className={styles.bio}>
-            {profile?.username ? (
-              <>
-                Obsessed with great directing, bold storytelling, and <br />
-                films that stick with you long after the credits roll.
-              </>
-            ) : (
-              " "
-            )}
-          </p>
+          <div className={styles.username}>@{profile?.username || "username"}</div>
 
           <div className={styles.stats}>
             <div className={styles.stat}>
               <div className={styles.statValue}>{watchedTotal}</div>
               <div className={styles.statLabel}>Films</div>
             </div>
+
             <div className={styles.stat}>
               <div className={styles.statValue}>0</div>
               <div className={styles.statLabel}>Following</div>
             </div>
+
             <div className={styles.stat}>
               <div className={styles.statValue}>0</div>
               <div className={styles.statLabel}>Followers</div>
             </div>
           </div>
+
 
           <button className={styles.editBtn} onClick={() => setEditOpen(true)}>
             Edit Profile
@@ -324,163 +370,264 @@ export default function Profile() {
       {/* TABS */}
       <div className={styles.tabsBar}>
         <div className={styles.tabs}>
-          <button className={`${styles.tab} ${styles.tabActive}`}>Profile</button>
-          <button className={styles.tab} onClick={() => navigate("/profile?tab=films")}>Films</button>
-          <button className={styles.tab} onClick={() => navigate("/profile?tab=watchlist")}>Watchlist</button>
-          <button className={styles.tab} onClick={() => navigate("/profile?tab=likes")}>Likes</button>
-          <button className={styles.tab} onClick={() => navigate("/profile?tab=lists")}>Lists</button>
+          <button
+            className={`${styles.tab} ${activeTab === "profile" ? styles.tabActive : ""}`}
+            onClick={() => navigate("/profile")}
+          >
+            Profile
+          </button>
+
+          <button
+            className={`${styles.tab} ${activeTab === "films" ? styles.tabActive : ""}`}
+            onClick={() => {
+              setFilmsPageIndex(0);
+              navigate("/profile?tab=films");
+            }}
+          >
+            Films
+          </button>
+
+          <button
+            className={`${styles.tab} ${activeTab === "watchlist" ? styles.tabActive : ""}`}
+            onClick={() => navigate("/profile?tab=watchlist")}
+          >
+            Watchlist
+          </button>
+
+          <button
+            className={`${styles.tab} ${activeTab === "likes" ? styles.tabActive : ""}`}
+            onClick={() => navigate("/profile?tab=likes")}
+          >
+            Likes
+          </button>
+
+          <button
+            className={`${styles.tab} ${activeTab === "lists" ? styles.tabActive : ""}`}
+            onClick={() => navigate("/profile?tab=lists")}
+          >
+            Lists
+          </button>
         </div>
       </div>
 
       {/* CONTENT */}
       <main className={styles.main}>
         <div className={styles.container}>
-          {loading && <div className={styles.loading}>Loading…</div>}
+          {activeTab === "profile" && loading && <div className={styles.loading}>Loading…</div>}
 
-          {/* Favorite Films */}
-          <section className={styles.block}>
-            <div className={styles.blockHeader}>
-              <h2 className={styles.h2}>Favorite Films</h2>
-            </div>
-            <div className={styles.posterRow}>
-              {Array.from({ length: 4 }).map((_, i) => {
-                const m = favorites[i];
-                const r = m ? ratingMap.get(m.id) : undefined;
-                return (
-                  <div key={i} className={styles.posterCard}>
-                    {m?.photoUrl ? (
-                      <img className={styles.posterImg} src={m.photoUrl} alt={m.title} />
-                    ) : (
-                      <div className={styles.posterFallback}>No poster</div>
-                    )}
-                    {r ? <Stars value={r.rating} /> : <div className={styles.starsSpacer} />}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          <div className={styles.hr} />
-
-          {/* Recent Activity (watched) */}
-          <section className={styles.block}>
-            <div className={styles.blockHeader}>
-              <h2 className={styles.h2}>Recent Activity</h2>
-              <button className={styles.allBtn}>All</button>
-            </div>
-
-            <div className={styles.posterRow}>
-              {Array.from({ length: 4 }).map((_, i) => {
-                const m = watched[i];
-                const r = m ? ratingMap.get(m.id) : undefined;
-                return (
-                  <div key={i} className={styles.posterCard}>
-                    {m?.photoUrl ? (
-                      <img className={styles.posterImg} src={m.photoUrl} alt={m.title} />
-                    ) : (
-                      <div className={styles.posterFallback}>No poster</div>
-                    )}
-                    {r ? <Stars value={r.rating} /> : <div className={styles.starsSpacer} />}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          <div className={styles.hr} />
-
-          {/* Recent Reviews */}
-          <section className={styles.block}>
-            <div className={styles.blockHeader}>
-              <h2 className={styles.h2}>Recent Reviews</h2>
-              <button className={styles.allBtn}>All</button>
-            </div>
-
-            <div className={styles.reviews}>
-              {(profile?.recentReviews || []).slice(0, 2).map((rv, idx) => {
-                const poster = moviePosterById[rv.movieId];
-                const rating = ratingMap.get(rv.movieId)?.rating;
-                return (
-                  <article key={idx} className={styles.reviewCard}>
-                    <div className={styles.reviewPoster}>
-                      {poster ? (
-                        <img src={poster} alt={rv.movieTitle} />
-                      ) : (
-                        <div className={styles.reviewPosterFallback}>No poster</div>
-                      )}
-                    </div>
-
-                    <div className={styles.reviewBody}>
-                      <div className={styles.reviewTitleRow}>
-                        <div className={styles.reviewTitle}>
-                          {rv.movieTitle}
-                          {typeof rating === "number" ? (
-                            <span className={styles.reviewRating}> ★ {rating.toFixed(1)}</span>
-                          ) : null}
-                        </div>
-                        <div className={styles.reviewDate}>{formatDate(rv.updatedAt || rv.createdAt)}</div>
-                      </div>
-
-                      <p className={styles.reviewText}>{rv.content}</p>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-
-          <div className={styles.hr} />
-
-          {/* Following */}
-          <section className={styles.block}>
-            <div className={styles.blockHeader}>
-              <h2 className={styles.h2}>Following</h2>
-              <button className={styles.allBtn}>All</button>
-            </div>
-
-            <div className={styles.followingRow}>
-              <div className={styles.followBubble} />
-              <div className={styles.followBubble} />
-              <div className={styles.followBubble} />
-            </div>
-          </section>
-
-          <div className={styles.hr} />
-
-          {/* Lists */}
-          <section className={styles.block}>
-            <div className={styles.blockHeader}>
-              <h2 className={styles.h2}>Lists</h2>
-              <button className={styles.allBtn}>All</button>
-            </div>
-
-            {listCard ? (
-              <div className={styles.listCard}>
-                <div className={styles.listPosters}>
+          {activeTab === "profile" && (
+            <>
+              {/* Favorite Films */}
+              <section className={styles.block}>
+                <div className={styles.blockHeader}>
+                  <h2 className={styles.h2}>Favorite Films</h2>
+                </div>
+                <div className={styles.posterRow}>
                   {Array.from({ length: 4 }).map((_, i) => {
-                    const url = listCard.posters[i];
+                    const m = favorites[i];
+                    const r = m ? ratingMap.get(m.id) : undefined;
                     return (
-                      <div key={i} className={styles.listPosterSlot}>
-                        {url ? <img src={url} alt="" /> : <div className={styles.listPosterFallback} />}
+                      <div key={i} className={styles.posterCard}>
+                        {m?.photoUrl ? (
+                          <img className={styles.posterImg} src={m.photoUrl} alt={m.title} />
+                        ) : (
+                          <div className={styles.posterFallback}>No poster</div>
+                        )}
+                        {r ? <Stars value={r.rating} /> : <div className={styles.starsSpacer} />}
                       </div>
                     );
                   })}
                 </div>
+              </section>
 
-                <div className={styles.listInfo}>
-                  <div className={styles.listTitle}>{listCard.list.name}</div>
-                  <div className={styles.listMeta}>{listCard.count} Films</div>
-                  <p className={styles.listDesc}>
-                    {listCard.list.description || " "}
-                  </p>
+              <div className={styles.hr} />
+
+              {/* Recent Activity (watched) */}
+              <section className={styles.block}>
+                <div className={styles.blockHeader}>
+                  <h2 className={styles.h2}>Recent Activity</h2>
+                  <button className={styles.allBtn}>All</button>
                 </div>
-              </div>
-            ) : (
-              <div className={styles.empty}>No custom lists yet.</div>
-            )}
-          </section>
 
-          <div className={styles.footerSpace} />
+                <div className={styles.posterRow}>
+                  {Array.from({ length: 4 }).map((_, i) => {
+                    const m = watched[i];
+                    const r = m ? ratingMap.get(m.id) : undefined;
+                    return (
+                      <div key={i} className={styles.posterCard}>
+                        {m?.photoUrl ? (
+                          <img className={styles.posterImg} src={m.photoUrl} alt={m.title} />
+                        ) : (
+                          <div className={styles.posterFallback}>No poster</div>
+                        )}
+                        {r ? <Stars value={r.rating} /> : <div className={styles.starsSpacer} />}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <div className={styles.hr} />
+
+              {/* Recent Reviews */}
+              <section className={styles.block}>
+                <div className={styles.blockHeader}>
+                  <h2 className={styles.h2}>Recent Reviews</h2>
+                  <button className={styles.allBtn}>All</button>
+                </div>
+
+                <div className={styles.reviews}>
+                  {(profile?.recentReviews || []).slice(0, 2).map((rv, idx) => {
+                    const poster = moviePosterById[rv.movieId];
+                    const rating = ratingMap.get(rv.movieId)?.rating;
+                    return (
+                      <article key={idx} className={styles.reviewCard}>
+                        <div className={styles.reviewPoster}>
+                          {poster ? (
+                            <img src={poster} alt={rv.movieTitle} />
+                          ) : (
+                            <div className={styles.reviewPosterFallback}>No poster</div>
+                          )}
+                        </div>
+
+                        <div className={styles.reviewBody}>
+                          <div className={styles.reviewTitleRow}>
+                            <div className={styles.reviewTitle}>
+                              {rv.movieTitle}
+                              {typeof rating === "number" ? (
+                                <span className={styles.reviewRating}> ★ {rating.toFixed(1)}</span>
+                              ) : null}
+                            </div>
+                            <div className={styles.reviewDate}>{formatDate(rv.updatedAt || rv.createdAt)}</div>
+                          </div>
+
+                          <p className={styles.reviewText}>{rv.content}</p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <div className={styles.hr} />
+
+              {/* Following */}
+              <section className={styles.block}>
+                <div className={styles.blockHeader}>
+                  <h2 className={styles.h2}>Following</h2>
+                  <button className={styles.allBtn}>All</button>
+                </div>
+
+                <div className={styles.followingRow}>
+                  <div className={styles.followBubble} />
+                  <div className={styles.followBubble} />
+                  <div className={styles.followBubble} />
+                </div>
+              </section>
+
+              <div className={styles.hr} />
+
+              {/* Lists */}
+              <section className={styles.block}>
+                <div className={styles.blockHeader}>
+                  <h2 className={styles.h2}>Lists</h2>
+                  <button className={styles.allBtn}>All</button>
+                </div>
+
+                {listCard ? (
+                  <div className={styles.listCard}>
+                    <div className={styles.listPosters}>
+                      {Array.from({ length: 4 }).map((_, i) => {
+                        const url = listCard.posters[i];
+                        return (
+                          <div key={i} className={styles.listPosterSlot}>
+                            {url ? <img src={url} alt="" /> : <div className={styles.listPosterFallback} />}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className={styles.listInfo}>
+                      <div className={styles.listTitle}>{listCard.list.name}</div>
+                      <div className={styles.listMeta}>{listCard.count} Films</div>
+                      <p className={styles.listDesc}>{listCard.list.description || " "}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.empty}>No custom lists yet.</div>
+                )}
+              </section>
+
+              <div className={styles.footerSpace} />
+            </>
+          )}
+
+          {activeTab === "films" && (
+            <>
+              <div className={styles.filmsTopRow}>
+                <h2 className={styles.filmsTitle}>Watched</h2>
+              </div>
+
+              <div className={styles.hr} />
+
+              {filmsLoading ? (
+                <div className={styles.loading}>Loading…</div>
+              ) : (
+                <>
+                  <div className={styles.filmsGrid}>
+                    {(filmsWatched?.content || []).map((m) => {
+                      const r = (m.rating ?? ratingMap.get(m.id)?.rating ?? 0) as number;
+                      return (
+                        <div key={m.id} className={styles.filmsCard}>
+                          {m.photoUrl ? (
+                            <img className={styles.filmsPoster} src={m.photoUrl} alt={m.title} />
+                          ) : (
+                            <div className={styles.filmsPosterFallback}>No poster</div>
+                          )}
+                          <Stars value={r} />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className={styles.filmsBottomBar}>
+                    <div className={styles.filmsPager}>
+                      {buildPager(filmsWatched?.totalPages || 0).map((p, idx) => {
+                        if (p === "dots") {
+                          return (
+                            <span key={`dots-${idx}`} className={styles.pagerDots}>
+                              …
+                            </span>
+                          );
+                        }
+                        const pageIndex = p as number;
+                        const isActive = pageIndex === filmsPageIndex;
+                        return (
+                          <button
+                            key={pageIndex}
+                            className={`${styles.pagerBtn} ${isActive ? styles.pagerBtnActive : ""}`}
+                            onClick={() => setFilmsPageIndex(pageIndex)}
+                          >
+                            {pageIndex + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button className={styles.orderBtn} type="button">
+                      Order
+                    </button>
+                  </div>
+                </>
+              )}
+
+              <div className={styles.footerSpace} />
+            </>
+          )}
+
+          {activeTab === "watchlist" && <div className={styles.placeholder}>Watchlist (next)</div>}
+          {activeTab === "likes" && <div className={styles.placeholder}>Likes (next)</div>}
+          {activeTab === "lists" && <div className={styles.placeholder}>Lists (next)</div>}
         </div>
       </main>
 
