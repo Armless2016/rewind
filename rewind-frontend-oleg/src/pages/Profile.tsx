@@ -141,7 +141,13 @@ export default function Profile() {
 
   const [backdropUrl, setBackdropUrl] = useState<string | null>(null);
 
-
+  // Watchlist tab (Wants To See)
+  const WATCHLIST_PAGE_SIZE = 24; // 6 posters x 4 rows
+  const [watchlistPageIndex, setWatchlistPageIndex] = useState(0);
+  const [watchlistMovies, setWatchlistMovies] = useState<MovieCard[]>([]);
+  const [watchlistTotal, setWatchlistTotal] = useState(0);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
+  const [watchlistList, setWatchlistList] = useState<MyList | null>(null);
 
   // для постерів у reviews (бо бекенд review item не має photoUrl)
   const [moviePosterById, setMoviePosterById] = useState<Record<number, string>>({});
@@ -286,6 +292,58 @@ export default function Profile() {
     };
   }, [activeTab, filmsPageIndex]);
 
+    useEffect(() => {
+      let alive = true;
+
+      async function loadWatchlist() {
+        if (activeTab !== "watchlist") return;
+
+        try {
+          setWatchlistLoading(true);
+
+          // 1) знайти системний list типу WATCHLIST / WANT_TO_SEE
+          const listsRes = await getUserLists();
+          if (!alive) return;
+          const lists: MyList[] = listsRes.data || [];
+
+          const wl =
+            lists.find((l) =>
+              ["WATCHLIST", "WANT_TO_SEE", "WANTS_TO_SEE"].includes(
+                String(l.listType).toUpperCase()
+              )
+            ) || null;
+
+          setWatchlistList(wl);
+
+          if (!wl) {
+            setWatchlistMovies([]);
+            setWatchlistTotal(0);
+            return;
+          }
+
+          // 2) витягнути items і зробити пагінацію на фронті
+          const itemsRes = await api.get(`/lists/${wl.id}/items`);
+          if (!alive) return;
+
+          const items: ListItem[] = itemsRes.data || [];
+          const movies = items.map((it) => it.movie).filter(Boolean) as MovieCard[];
+
+          setWatchlistTotal(movies.length);
+
+          const start = watchlistPageIndex * WATCHLIST_PAGE_SIZE;
+          setWatchlistMovies(movies.slice(start, start + WATCHLIST_PAGE_SIZE));
+        } finally {
+          if (alive) setWatchlistLoading(false);
+        }
+      }
+
+      loadWatchlist();
+      return () => {
+        alive = false;
+      };
+    }, [activeTab, watchlistPageIndex]);
+
+
   useEffect(() => {
     if (!profile) return;
     setEditName(profile.displayName || profile.username || "");
@@ -389,7 +447,10 @@ export default function Profile() {
 
           <button
             className={`${styles.tab} ${activeTab === "watchlist" ? styles.tabActive : ""}`}
-            onClick={() => navigate("/profile?tab=watchlist")}
+            onClick={() => {
+              setWatchlistPageIndex(0);
+              navigate("/profile?tab=watchlist");
+            }}
           >
             Watchlist
           </button>
@@ -625,7 +686,72 @@ export default function Profile() {
             </>
           )}
 
-          {activeTab === "watchlist" && <div className={styles.placeholder}>Watchlist (next)</div>}
+          {activeTab === "watchlist" && (
+            <section className={styles.filmsSection}>
+              <div className={styles.filmsTopRow}>
+                <h2 className={styles.filmsTitle}>Wants To See</h2>
+              </div>
+
+              {watchlistLoading ? (
+                <div className={styles.loading}>Loading…</div>
+              ) : (
+                <>
+                  <div className={styles.filmsGrid}>
+                    {watchlistMovies.map((m) => (
+                      <div key={m.id} className={styles.filmsCard}>
+                        {m.photoUrl ? (
+                          <img className={styles.filmsPoster} src={m.photoUrl} alt={m.title} />
+                        ) : (
+                          <div className={styles.filmsPosterFallback}>No poster</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className={styles.filmsBottomBar}>
+                    <div className={styles.filmsPager}>
+                      {buildPager(Math.ceil(watchlistTotal / WATCHLIST_PAGE_SIZE) || 0).map((p, idx) => {
+                        if (p === "dots") return <span key={idx} className={styles.pagerDots}>…</span>;
+                        const pageIndex = p as number;
+                        const isActive = pageIndex === watchlistPageIndex;
+                        return (
+                          <button
+                            key={pageIndex}
+                            className={`${styles.pagerBtn} ${isActive ? styles.pagerBtnActive : ""}`}
+                            onClick={() => setWatchlistPageIndex(pageIndex)}
+                          >
+                            {pageIndex + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button className={styles.orderBtn} type="button">
+                      Order
+                    </button>
+                  </div>
+
+                  <div className={styles.howTo}>
+                    <div className={styles.howTitle}>How To Add</div>
+                    <div className={styles.howText}>
+                      Add films you want to see to your watchlist from the icon on each film poster
+                      or click the Watchlist icon in the actions panel on a film or review page.
+                    </div>
+
+                    <div className={styles.howBtns}>
+                      <button className={styles.howBtn} type="button">
+                        Make this list private
+                      </button>
+                      <button className={styles.howBtnGhost} type="button">
+                        Clear watchlist
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </section>
+          )}
+
           {activeTab === "likes" && <div className={styles.placeholder}>Likes (next)</div>}
           {activeTab === "lists" && <div className={styles.placeholder}>Lists (next)</div>}
         </div>
