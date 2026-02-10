@@ -22,7 +22,7 @@ function Header() {
         <Link to="/lists">LISTS</Link>
         <Link to="/members">MEMBERS</Link>
         <Link to="/journals">JOURNALS</Link>
-        <Link to="/profile">ACCOUNT</Link>
+        <Link to={isAuth ? "/profile" : "/register"}>ACCOUNT</Link>
       </nav>
 
       <div className="nav-right-container">
