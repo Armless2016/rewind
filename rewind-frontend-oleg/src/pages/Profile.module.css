@@ -606,3 +606,24 @@
   background: transparent;
 }
 
+.likeMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.likeHeart {
+  font-size: 12px;
+  line-height: 1;
+  color: rgba(255,255,255,0.35);
+  transform: translateY(1px);
+}
+
+.likesBottomBar {
+  display: flex;
+  justify-content: center; /* як на скріні — сторінки по центру */
+  padding: 16px 0 0;
+}
+
+

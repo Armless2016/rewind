@@ -149,6 +149,14 @@ export default function Profile() {
   const [watchlistLoading, setWatchlistLoading] = useState(false);
   const [watchlistList, setWatchlistList] = useState<MyList | null>(null);
 
+    // ===== Likes tab =====
+    const LIKES_PAGE_SIZE = 24; // 6 x 4 як на скріні
+    const [likesPageIndex, setLikesPageIndex] = useState(0);
+    const [likesMovies, setLikesMovies] = useState<MovieCard[]>([]);
+    const [likesTotal, setLikesTotal] = useState(0);
+    const [likesLoading, setLikesLoading] = useState(false);
+    const [likesList, setLikesList] = useState<MyList | null>(null);
+
   // для постерів у reviews (бо бекенд review item не має photoUrl)
   const [moviePosterById, setMoviePosterById] = useState<Record<number, string>>({});
 
@@ -343,6 +351,59 @@ export default function Profile() {
       };
     }, [activeTab, watchlistPageIndex]);
 
+      useEffect(() => {
+        let alive = true;
+
+        async function loadLikes() {
+          if (activeTab !== "likes") return;
+
+          try {
+            setLikesLoading(true);
+
+            // 1) беремо списки користувача
+            const listsRes = await getUserLists();
+            if (!alive) return;
+
+            const lists: MyList[] = listsRes.data || [];
+
+            // 2) шукаємо системний список LIKED
+            const liked =
+              lists.find(
+                (l) => String(l.listType).toUpperCase() === "LIKED"
+              ) || null;
+
+            setLikesList(liked);
+
+            if (!liked) {
+              setLikesMovies([]);
+              setLikesTotal(0);
+              return;
+            }
+
+            // 3) беремо items цього списку
+            const itemsRes = await api.get(`/lists/${liked.id}/items`);
+            if (!alive) return;
+
+            const items: ListItem[] = itemsRes.data || [];
+            const movies = items.map((it) => it.movie).filter(Boolean) as MovieCard[];
+
+            setLikesTotal(movies.length);
+
+            // 4) пагінація на фронті як у watchlist
+            const start = likesPageIndex * LIKES_PAGE_SIZE;
+            setLikesMovies(movies.slice(start, start + LIKES_PAGE_SIZE));
+          } finally {
+            if (alive) setLikesLoading(false);
+          }
+        }
+
+        loadLikes();
+        return () => {
+          alive = false;
+        };
+      }, [activeTab, likesPageIndex]);
+
+
 
   useEffect(() => {
     if (!profile) return;
@@ -457,7 +518,10 @@ export default function Profile() {
 
           <button
             className={`${styles.tab} ${activeTab === "likes" ? styles.tabActive : ""}`}
-            onClick={() => navigate("/profile?tab=likes")}
+            onClick={() => {
+              setLikesPageIndex(0);
+              navigate("/profile?tab=likes");
+            }}
           >
             Likes
           </button>
@@ -752,7 +816,72 @@ export default function Profile() {
             </section>
           )}
 
-          {activeTab === "likes" && <div className={styles.placeholder}>Likes (next)</div>}
+          {activeTab === "likes" && (
+            <>
+              <div className={styles.filmsTopRow}>
+                <h2 className={styles.filmsTitle}>Liked</h2>
+              </div>
+
+              {likesLoading ? (
+                <div className={styles.loading}>Loading…</div>
+              ) : (
+                <>
+                  <div className={styles.filmsGrid}>
+                    {likesMovies.map((m) => {
+                      const r = (m.rating ?? ratingMap.get(m.id)?.rating ?? 0) as number;
+
+                      return (
+                        <div key={m.id} className={styles.filmsCard}>
+                          {m.photoUrl ? (
+                            <img className={styles.filmsPoster} src={m.photoUrl} alt={m.title} />
+                          ) : (
+                            <div className={styles.filmsPosterFallback}>No poster</div>
+                          )}
+
+                          <div className={styles.likeMetaRow}>
+                            <span className={styles.likeHeart} aria-hidden>
+                              ♥
+                            </span>
+                            <Stars value={r} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className={styles.likesBottomBar}>
+                    <div className={styles.filmsPager}>
+                      {buildPager(Math.ceil(likesTotal / LIKES_PAGE_SIZE) || 0).map((p, idx) => {
+                        if (p === "dots") {
+                          return (
+                            <span key={`dots-${idx}`} className={styles.pagerDots}>
+                              …
+                            </span>
+                          );
+                        }
+                        const pageIndex = p as number;
+                        const isActive = pageIndex === likesPageIndex;
+                        return (
+                          <button
+                            key={pageIndex}
+                            className={`${styles.pagerBtn} ${isActive ? styles.pagerBtnActive : ""}`}
+                            onClick={() => setLikesPageIndex(pageIndex)}
+                          >
+                            {pageIndex + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className={styles.footerSpace} />
+            </>
+          )}
+
+
+
           {activeTab === "lists" && <div className={styles.placeholder}>Lists (next)</div>}
         </div>
       </main>
