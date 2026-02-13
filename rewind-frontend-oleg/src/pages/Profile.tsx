@@ -13,7 +13,7 @@ import {
   updateProfile,
 } from "../api/profile.api";
 import { getMovieDetails } from "../api/movies.api";
-import { getUserLists } from "../api/lists.api";
+import { createList, getListItems, getUserLists, updateList } from "../api/lists.api";
 import api from "../api/axios";
 
 type ProfileReviewItem = {
@@ -101,13 +101,44 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-function buildPager(totalPages: number) {
-  // 1 2 3 … last (як на скріні)
-  if (!totalPages || totalPages <= 1) return [];
+
+
+
+
+function buildPager(totalPages: number, currentPage: number) {
+  if (totalPages <= 1) return [0];
+
   const last = totalPages - 1;
-  if (totalPages <= 4) return Array.from({ length: totalPages }).map((_, i) => i);
-  return [0, 1, 2, "dots", last] as const;
+  const pages: Array<number | "dots"> = [];
+
+  const windowPages = new Set<number>([
+    0,
+    1,
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    last - 1,
+    last,
+  ]);
+
+  const inRange = (p: number) => p >= 0 && p <= last;
+
+  const sorted = Array.from(windowPages)
+    .filter(inRange)
+    .sort((a, b) => a - b);
+
+  let prev: number | null = null;
+  for (const p of sorted) {
+    if (prev !== null && p - prev > 1) pages.push("dots");
+    pages.push(p);
+    prev = p;
+  }
+
+  return pages;
 }
+
+
+
 
 export default function Profile() {
   const { isAuth } = useAuth();
@@ -132,6 +163,15 @@ export default function Profile() {
   const [favorites, setFavorites] = useState<MovieCard[]>([]);
   const [watched, setWatched] = useState<MovieCard[]>([]);
   const [watchedTotal, setWatchedTotal] = useState<number>(0);
+
+  const WATCHED_PAGE_SIZE = 24;
+
+  const [watchedMovies, setWatchedMovies] = useState<MovieCard[]>([]);
+  const [watchedLoading, setWatchedLoading] = useState(false);
+
+  const [watchedPageIndex, setWatchedPageIndex] = useState(0);
+  const [watchedTotalPages, setWatchedTotalPages] = useState(0);
+
 
   // Films tab (Watched grid)
   const FILMS_PAGE_SIZE = 24; // 6 posters x 4 rows (like макет)
@@ -167,6 +207,24 @@ export default function Profile() {
 
   // lists preview (1 карточка як у макеті)
   const [listCard, setListCard] = useState<{ list: MyList; posters: string[]; count: number } | null>(null);
+  // ===== Lists tab =====
+  const [listsLoading, setListsLoading] = useState(false);
+  const [listsCards, setListsCards] = useState<Array<{ list: MyList; posters: string[]; count: number }>>([]);
+  const [listsReloadKey, setListsReloadKey] = useState(0);
+
+  const [createListOpen, setCreateListOpen] = useState(false);
+  const [createListName, setCreateListName] = useState("");
+  const [createListDesc, setCreateListDesc] = useState("");
+  const [createListPublic, setCreateListPublic] = useState(true);
+
+  const [editListOpen, setEditListOpen] = useState(false);
+  const [editListTarget, setEditListTarget] = useState<MyList | null>(null);
+  const [editListName, setEditListName] = useState("");
+  const [editListDesc, setEditListDesc] = useState("");
+  const [editListPublic, setEditListPublic] = useState(true);
+
+  const LIST_TAGS = ["mytop", "favorites", "rewatch", "personal", "cinema", "topfilms", "alltime", "essential"];
+
 
   const ratingMap = useMemo(() => {
     const m = new Map<number, ProfileRatingItem>();
@@ -278,6 +336,39 @@ export default function Profile() {
     };
   }, []);
 
+  useEffect(() => {
+    let alive = true;
+
+    async function loadWatched() {
+      if (activeTab !== "films") return; // або як у тебе називається tab з watched
+
+      try {
+        setWatchedLoading(true);
+
+        const res = await getMyWatched(watchedPageIndex, WATCHED_PAGE_SIZE);
+        if (!alive) return;
+
+        const page: Page<MovieCard> = res.data;
+
+        setWatchedMovies(page.content || []);
+        setWatchedTotalPages(page.totalPages ?? 0);
+
+        // якщо бекенд повернув інший номер (іноді так буває)
+        if (typeof page.number === "number" && page.number !== watchedPageIndex) {
+          setWatchedPageIndex(page.number);
+        }
+      } finally {
+        if (alive) setWatchedLoading(false);
+      }
+    }
+
+    loadWatched();
+    return () => {
+      alive = false;
+    };
+  }, [activeTab, watchedPageIndex]);
+
+
   // ✅ Films tab: Watched grid + pagination
   useEffect(() => {
     let alive = true;
@@ -360,38 +451,14 @@ export default function Profile() {
           try {
             setLikesLoading(true);
 
-            // 1) беремо списки користувача
-            const listsRes = await getUserLists();
+            // ✅ Likes = Favorites з бекенду
+            const res = await getMyFavorites(likesPageIndex, LIKES_PAGE_SIZE);
             if (!alive) return;
 
-            const lists: MyList[] = listsRes.data || [];
+            const page = res.data as Page<MovieCard>;
 
-            // 2) шукаємо системний список LIKED
-            const liked =
-              lists.find(
-                (l) => String(l.listType).toUpperCase() === "LIKED"
-              ) || null;
-
-            setLikesList(liked);
-
-            if (!liked) {
-              setLikesMovies([]);
-              setLikesTotal(0);
-              return;
-            }
-
-            // 3) беремо items цього списку
-            const itemsRes = await api.get(`/lists/${liked.id}/items`);
-            if (!alive) return;
-
-            const items: ListItem[] = itemsRes.data || [];
-            const movies = items.map((it) => it.movie).filter(Boolean) as MovieCard[];
-
-            setLikesTotal(movies.length);
-
-            // 4) пагінація на фронті як у watchlist
-            const start = likesPageIndex * LIKES_PAGE_SIZE;
-            setLikesMovies(movies.slice(start, start + LIKES_PAGE_SIZE));
+            setLikesMovies(page.content || []);
+            setLikesTotal(page.totalElements || 0);
           } finally {
             if (alive) setLikesLoading(false);
           }
@@ -402,6 +469,54 @@ export default function Profile() {
           alive = false;
         };
       }, [activeTab, likesPageIndex]);
+
+  useEffect(() => {
+    let alive = true;
+
+    async function loadLists() {
+      if (activeTab !== "lists") return;
+
+      try {
+        setListsLoading(true);
+
+        const listsRes = await getUserLists();
+        if (!alive) return;
+
+        const all: MyList[] = listsRes.data || [];
+        const custom = all.filter((l) => String(l.listType).toUpperCase() === "CUSTOM");
+
+        const cards = await Promise.all(
+          custom.map(async (list) => {
+            try {
+              const itemsRes = await getListItems(list.id);
+              const items: ListItem[] = itemsRes.data || [];
+
+              const posters = items
+                .map((it) => it.movie?.photoUrl)
+                .filter(Boolean)
+                .slice(0, 4) as string[];
+
+              return { list, posters, count: items.length };
+            } catch {
+              return { list, posters: [] as string[], count: 0 };
+            }
+          })
+        );
+
+        if (!alive) return;
+        setListsCards(cards);
+      } finally {
+        if (alive) setListsLoading(false);
+      }
+    }
+
+    loadLists();
+    return () => {
+      alive = false;
+    };
+  }, [activeTab, listsReloadKey]);
+
+
 
 
 
@@ -426,6 +541,61 @@ export default function Profile() {
       // можна додати toast/error
     }
   };
+
+  const openCreateList = () => {
+    setCreateListName("");
+    setCreateListDesc("");
+    setCreateListPublic(true);
+    setCreateListOpen(true);
+  };
+
+  const submitCreateList = async () => {
+    const name = createListName.trim();
+    if (!name) return;
+
+    try {
+      await createList({
+        name,
+        description: createListDesc.trim() ? createListDesc.trim() : undefined,
+        isPublic: createListPublic,
+      });
+      setCreateListOpen(false);
+      setListsReloadKey((k) => k + 1);
+    } catch {
+      // можна додати error/toast
+    }
+  };
+
+  const openEditList = (list: MyList) => {
+    setEditListTarget(list);
+    setEditListName(list.name || "");
+    setEditListDesc(list.description || "");
+    setEditListPublic(Boolean(list.isPublic));
+    setEditListOpen(true);
+  };
+
+  const submitEditList = async () => {
+    if (!editListTarget) return;
+
+    const name = editListName.trim();
+    if (!name) return;
+
+    try {
+      await updateList(editListTarget.id, {
+        name,
+        description: editListDesc.trim() ? editListDesc.trim() : undefined,
+        isPublic: editListPublic,
+      });
+      setEditListOpen(false);
+      setEditListTarget(null);
+      setListsReloadKey((k) => k + 1);
+    } catch {
+      // можна додати error/toast
+    }
+  };
+
+
+
 
   if (!isAuth) return null; // поки редірект
 
@@ -702,6 +872,7 @@ export default function Profile() {
                   <div className={styles.filmsGrid}>
                     {(filmsWatched?.content || []).map((m) => {
                       const r = (m.rating ?? ratingMap.get(m.id)?.rating ?? 0) as number;
+
                       return (
                         <div key={m.id} className={styles.filmsCard}>
                           {m.photoUrl ? (
@@ -714,6 +885,37 @@ export default function Profile() {
                       );
                     })}
                   </div>
+
+                  {/* ✅ pager */}
+                  {(filmsWatched?.totalPages ?? 0) > 1 && (
+                    <div className={styles.pagerRow}>
+                      {buildPager(filmsWatched?.totalPages ?? 0, watchedPageIndex).map((p, idx) => {
+                        if (p === "dots") {
+                          return (
+                            <span key={`dots-${idx}`} className={styles.pagerDots}>
+                              …
+                            </span>
+                          );
+                        }
+
+                        const pageIndex = p as number;
+                        const isActive = pageIndex === watchedPageIndex;
+
+                        return (
+                          <button
+                            key={pageIndex}
+                            type="button"
+                            className={`${styles.pagerBtn} ${isActive ? styles.pagerBtnActive : ""}`}
+                            onClick={() => setWatchedPageIndex(pageIndex)}
+                            disabled={watchedLoading}
+                          >
+                            {pageIndex + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
 
                   <div className={styles.filmsBottomBar}>
                     <div className={styles.filmsPager}>
@@ -752,6 +954,9 @@ export default function Profile() {
 
           {activeTab === "watchlist" && (
             <section className={styles.filmsSection}>
+              {/* ✅ line above title (як в інших вкладках) */}
+              <div className={styles.sectionLine} />
+
               <div className={styles.filmsTopRow}>
                 <h2 className={styles.filmsTitle}>Wants To See</h2>
               </div>
@@ -772,28 +977,48 @@ export default function Profile() {
                     ))}
                   </div>
 
-                  <div className={styles.filmsBottomBar}>
-                    <div className={styles.filmsPager}>
-                      {buildPager(Math.ceil(watchlistTotal / WATCHLIST_PAGE_SIZE) || 0).map((p, idx) => {
-                        if (p === "dots") return <span key={idx} className={styles.pagerDots}>…</span>;
-                        const pageIndex = p as number;
-                        const isActive = pageIndex === watchlistPageIndex;
-                        return (
-                          <button
-                            key={pageIndex}
-                            className={`${styles.pagerBtn} ${isActive ? styles.pagerBtnActive : ""}`}
-                            onClick={() => setWatchlistPageIndex(pageIndex)}
-                          >
-                            {pageIndex + 1}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  {/* ✅ Newer — pages — Older (без Order) */}
+                 <div className={styles.watchlistBottomBar}>
+                   <button
+                     className={styles.pillBtn}
+                     type="button"
+                     disabled={watchlistPageIndex === 0}
+                     onClick={() => setWatchlistPageIndex((p) => Math.max(0, p - 1))}
+                   >
+                     Newer
+                   </button>
 
-                    <button className={styles.orderBtn} type="button">
-                      Order
-                    </button>
-                  </div>
+                   <div className={styles.filmsPagerCenter}>
+                     {buildPager(Math.ceil(watchlistTotal / WATCHLIST_PAGE_SIZE) || 0).map((p, idx) => {
+                       if (p === "dots") return <span key={idx} className={styles.pagerDots}>…</span>;
+                       const pageIndex = p as number;
+                       const isActive = pageIndex === watchlistPageIndex;
+                       return (
+                         <button
+                           key={pageIndex}
+                           className={`${styles.pagerBtn} ${isActive ? styles.pagerBtnActive : ""}`}
+                           onClick={() => setWatchlistPageIndex(pageIndex)}
+                           type="button"
+                         >
+                           {pageIndex + 1}
+                         </button>
+                       );
+                     })}
+                   </div>
+
+                   <button
+                     className={styles.pillBtn}
+                     type="button"
+                     disabled={watchlistPageIndex >= (Math.ceil(watchlistTotal / WATCHLIST_PAGE_SIZE) || 1) - 1}
+                     onClick={() =>
+                       setWatchlistPageIndex((p) =>
+                         Math.min((Math.ceil(watchlistTotal / WATCHLIST_PAGE_SIZE) || 1) - 1, p + 1)
+                       )
+                     }
+                   >
+                     Older
+                   </button>
+                 </div>
 
                   <div className={styles.howTo}>
                     <div className={styles.howTitle}>How To Add</div>
@@ -816,10 +1041,12 @@ export default function Profile() {
             </section>
           )}
 
+
           {activeTab === "likes" && (
             <>
-              <div className={styles.filmsTopRow}>
-                <h2 className={styles.filmsTitle}>Liked</h2>
+              {/* LINE + TITLE like in макет */}
+              <div className={styles.sectionHeaderRow}>
+                <h2 className={styles.sectionHeaderTitle}>Liked</h2>
               </div>
 
               {likesLoading ? (
@@ -848,6 +1075,11 @@ export default function Profile() {
                       );
                     })}
                   </div>
+
+                  {/* LINE after films like in макет */}
+                  <div className={styles.sectionBottomDivider} />
+
+
 
                   <div className={styles.likesBottomBar}>
                     <div className={styles.filmsPager}>
@@ -882,11 +1114,178 @@ export default function Profile() {
 
 
 
-          {activeTab === "lists" && <div className={styles.placeholder}>Lists (next)</div>}
+
+          {activeTab === "lists" && (
+            <section className={styles.listsSection}>
+              <div className={styles.listsHeaderRow}>
+                <div className={styles.listsTitle}>Your Lists</div>
+              </div>
+
+              {listsLoading ? (
+                <div className={styles.placeholder}>Loading...</div>
+              ) : (
+                <div className={styles.listsRows}>
+                  {listsCards.map(({ list, posters, count }) => (
+                    <div key={list.id} className={styles.listRowCard}>
+                      <div className={styles.listRowLeft}>
+                        <div className={styles.listRowPosters}>
+                          {[0, 1, 2, 3].map((i) => {
+                            const src = posters[i];
+                            return (
+                              <div
+                                key={i}
+                                className={`${styles.posterTile} ${!src ? styles.posterTileEmpty : ""}`}
+                                style={{ transform: `translateX(${i * 34}px)` }}
+                              >
+                                {src ? <img src={src} alt="" /> : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className={styles.listRowBody}>
+                        <div className={styles.listRowTop}>
+                          <div>
+                            <div className={styles.listRowName}>{list.name}</div>
+                            <div className={styles.listRowMeta}>{count} Films</div>
+                          </div>
+
+                          <button
+                            className={styles.listRowEditBtn}
+                            onClick={() => openEditList(list)}
+                            aria-label="Edit list"
+                            title="Edit"
+                          >
+                            ✎
+                          </button>
+                        </div>
+
+                        <div className={styles.listRowDesc}>
+                          {list.description || ""}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className={styles.startNewListWrap}>
+                <button className={styles.startNewListBtn} onClick={openCreateList}>
+                  Start a new list
+                </button>
+              </div>
+
+              <div className={styles.tagsBlock}>
+                <div className={styles.tagsTitle}>List tags</div>
+                <div className={styles.tagsRow}>
+                  {LIST_TAGS.map((t) => (
+                    <span key={t} className={styles.tagChip}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
         </div>
       </main>
 
       <Footer />
+
+      {/* CREATE LIST MODAL */}
+      {createListOpen && (
+        <div className={styles.modalBackdrop} onClick={() => setCreateListOpen(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Start a new list</h3>
+
+            <label className={styles.modalLabel}>Name</label>
+            <input
+              className={styles.modalInput}
+              value={createListName}
+              onChange={(e) => setCreateListName(e.target.value)}
+              placeholder="List name"
+            />
+
+            <label className={styles.modalLabel}>Description</label>
+            <textarea
+              className={`${styles.modalInput} ${styles.modalTextarea}`}
+              value={createListDesc}
+              onChange={(e) => setCreateListDesc(e.target.value)}
+              placeholder="Write something about this list..."
+            />
+
+            <label className={styles.modalCheckRow}>
+              <input
+                type="checkbox"
+                checked={createListPublic}
+                onChange={(e) => setCreateListPublic(e.target.checked)}
+              />
+              <span>Public</span>
+            </label>
+
+            <div className={styles.modalActions}>
+              <button className={styles.modalBtnGhost} onClick={() => setCreateListOpen(false)}>
+                Cancel
+              </button>
+              <button className={styles.modalBtn} onClick={submitCreateList}>
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT LIST MODAL */}
+      {editListOpen && editListTarget && (
+        <div className={styles.modalBackdrop} onClick={() => setEditListOpen(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Edit list</h3>
+
+            <label className={styles.modalLabel}>Name</label>
+            <input
+              className={styles.modalInput}
+              value={editListName}
+              onChange={(e) => setEditListName(e.target.value)}
+              placeholder="List name"
+            />
+
+            <label className={styles.modalLabel}>Description</label>
+            <textarea
+              className={`${styles.modalInput} ${styles.modalTextarea}`}
+              value={editListDesc}
+              onChange={(e) => setEditListDesc(e.target.value)}
+              placeholder="Description..."
+            />
+
+            <label className={styles.modalCheckRow}>
+              <input
+                type="checkbox"
+                checked={editListPublic}
+                onChange={(e) => setEditListPublic(e.target.checked)}
+              />
+              <span>Public</span>
+            </label>
+
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalBtnGhost}
+                onClick={() => {
+                  setEditListOpen(false);
+                  setEditListTarget(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button className={styles.modalBtn} onClick={submitEditList}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* EDIT MODAL */}
       {editOpen && (

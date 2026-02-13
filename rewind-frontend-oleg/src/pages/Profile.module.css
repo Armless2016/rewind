@@ -626,4 +626,336 @@
   padding: 16px 0 0;
 }
 
+/* ===== Lists tab (match макет) ===== */
+.listsSection {
+  padding: 18px 0 70px;
+}
+
+.listsHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  /* лінія зверху як на макеті */
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+
+  /* відступ між лінією і текстом */
+  padding-top: 12px;
+
+  /* відступи секції */
+  margin: 0 0 16px;
+}
+
+
+.listsTitle {
+  color: rgba(255,255,255,0.90);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}
+
+.listsRows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.listRowCard {
+  background: rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.listRowLeft {
+  width: 240px;
+  flex: 0 0 240px;
+}
+
+.listRowPosters {
+  position: relative;
+  width: 240px;
+  height: 112px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(0,0,0,0.18);
+}
+
+.posterTile {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 86px;
+  height: 112px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.28);
+}
+
+.posterTile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.posterTileEmpty {
+  background: rgba(255,255,255,0.04);
+}
+
+.listRowBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.listRowTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.listRowName {
+  color: rgba(255,255,255,0.92);
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.listRowMeta {
+  color: rgba(255,255,255,0.55);
+  font-size: 11px;
+}
+
+.listRowDesc {
+  margin-top: 10px;
+  color: rgba(255,255,255,0.60);
+  font-size: 11px;
+  line-height: 1.45;
+  max-height: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.listRowEditBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+.listRowEditBtn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.startNewListWrap {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 22px;
+}
+
+.startNewListBtn {
+  height: 38px;
+  padding: 0 26px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.85);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.startNewListBtn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.tagsBlock {
+  border-top: 1px solid rgba(255,255,255,0.10);
+  padding-top: 18px;
+}
+
+.tagsTitle {
+  color: rgba(255,255,255,0.70);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.tagsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tagChip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.70);
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* modal extras */
+.modalTextarea {
+  min-height: 92px;
+  resize: vertical;
+  padding-top: 10px;
+}
+
+.modalCheckRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  color: rgba(255,255,255,0.75);
+  font-size: 12px;
+}
+
+/* ===== універсальна “лінія + заголовок” як на макеті ===== */
+.sectionHeaderRow {
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  padding-top: 12px;
+  margin: 0 0 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionHeaderTitle {
+  color: rgba(255,255,255,0.90);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}
+
+/* лінія після контенту (перед пагінацією) */
+.sectionBottomDivider {
+  margin-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* пагінація по центру як “1” */
+.paginationCenter {
+  display: flex;
+  justify-content: center;
+  padding: 14px 0 0;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+}
+
+.pagerRow {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 22px;
+  padding-bottom: 12px;
+}
+
+.pagerBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.pagerBtn:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.pagerBtnActive {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+.pagerDots {
+  padding: 6px 2px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* лінія над Wants To See */
+.sectionLine {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.10);
+  margin: 22px 0; /* універсально: зверху/знизу як розділювач */
+}
+
+/* нижній бар: Newer — pages — Older */
+.watchlistBottomBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 26px;
+}
+
+/* щоб цифри були по центру */
+.filmsPagerCenter {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+/* кнопки зліва/справа */
+.edgeBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 6px 10px;
+}
+
+.edgeBtn:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.edgeBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pillBtn {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+  user-select: none;
+}
+
+.pillBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.pillBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 
