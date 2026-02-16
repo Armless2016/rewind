@@ -1,14 +1,27 @@
 .rewind-header {
-  position: relative;
-  z-index: 3;
+  position: fixed;           /* ключове: overlay */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   align-items: center;
-  padding: 30px 20px;
+
+  padding: 22px 20px;
   gap: 60px;
-  max-width: 1200px;
-  margin: 0 auto;
+
+  /* ключове: прозорість + blur */
+  background: rgba(0, 0, 0, 0.25) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+
+  /* необов’язково, але виглядає акуратно */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
+
+
 
 .nav-left {
   display: flex;
@@ -77,4 +90,9 @@
 .login-toggle:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Пункти меню, які поки що нічого не відкривають */
+.nav-center .nav-disabled {
+  cursor: default;
 }

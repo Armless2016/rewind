@@ -69,3 +69,12 @@
   margin-top: 10px;
   letter-spacing: 0.02em;
 }
+
+/* Поки що неактивні посилання (без переходу) */
+.footer-link-disabled {
+  cursor: default;
+}
+
+.footer-link-disabled:hover {
+  opacity: 1;
+}

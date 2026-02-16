@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
 import MainPage from "./MainPage/MainPage";
+import FilmPage from "./FilmPage/FilmPage";
 
 import Login from "./auth/Login";
 import Register from "./auth/Register";
@@ -30,6 +31,9 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           <Route path="/search" element={<Search />} />
+
+          {/* Movie details */}
+          <Route path="/movie/:id" element={<FilmPage />} />
 
           <Route path="/lists" element={<UserLists />} />
 

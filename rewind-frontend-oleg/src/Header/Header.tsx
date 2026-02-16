@@ -7,6 +7,10 @@ import { useAuth } from "../context/AuthContext";
 function Header() {
   const { isAuth, logout } = useAuth();
 
+  const preventNav = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+  };
+
   return (
     <header className="rewind-header">
       <div className="nav-left">
@@ -20,8 +24,15 @@ function Header() {
       <nav className="nav-center">
         <Link to="/search">FILMS</Link>
         <Link to="/lists">LISTS</Link>
-        <Link to="/members">MEMBERS</Link>
-        <Link to="/journals">JOURNALS</Link>
+
+        {/* поки що не ведуть нікуди */}
+        <a href="#" onClick={preventNav} className="nav-disabled">
+          MEMBERS
+        </a>
+        <a href="#" onClick={preventNav} className="nav-disabled">
+          JOURNALS
+        </a>
+
         <Link to={isAuth ? "/profile" : "/register"}>ACCOUNT</Link>
       </nav>
 
@@ -30,7 +41,6 @@ function Header() {
           <Search size={18} />
         </Link>
 
-        {/* ✅ У хедері НЕМАЄ Log in / Sign up взагалі */}
         {isAuth && (
           <button className="login-toggle" onClick={logout}>
             Log out

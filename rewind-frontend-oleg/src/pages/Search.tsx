@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { searchMovies } from "../api/search.api";
+import { Link } from "react-router-dom";
 
 interface MovieCard {
   id: number;
@@ -39,7 +40,9 @@ export default function Search() {
       <ul>
         {results.map((m) => (
           <li key={m.id}>
-            {m.title} {m.releaseDate ? `(${m.releaseDate.slice(0, 4)})` : ""}
+            <Link to={`/movie/${m.id}`}>
+              {m.title} {m.releaseDate ? `(${m.releaseDate.slice(0, 4)})` : ""}
+            </Link>
           </li>
         ))}
       </ul>

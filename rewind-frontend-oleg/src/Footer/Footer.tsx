@@ -2,6 +2,10 @@ import "./Footer.css";
 import logoImg from "../assets/logo.png";
 import { Link } from "react-router-dom";
 
+const preventNav = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  e.preventDefault();
+};
+
 function Footer() {
   return (
     <footer className="main-footer">
@@ -12,7 +16,12 @@ function Footer() {
 
         <nav className="footer-nav">
           <Link to="/about">ABOUT US</Link>
-          <Link to="/news">NEWS</Link>
+
+          {/* поки що не веде нікуди */}
+          <a href="#" onClick={preventNav} className="footer-link-disabled">
+            NEWS
+          </a>
+
           <Link to="/help">HELP</Link>
           <Link to="/terms">TERMS</Link>
           <Link to="/contacts">CONTACTS</Link>
